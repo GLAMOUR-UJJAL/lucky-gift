@@ -121,9 +121,15 @@
             return pool[0].prize; 
         }
 
-        // --- STATE MANAGEMENT (PREVENTS RESET ON REFRESH ATTENT) ---
-        // Generates the prize immediately inside memory so it never re-rolls
-        const finalPrize = getWeightedGift(giftPool);
+        // --- MOBILE-PROOF STORAGE TRACKER ---
+        // Looks inside the hidden device memory to see if they already loaded a prize earlier
+        let finalPrize = localStorage.getItem("glamour_gift_lock");
+
+        if (!finalPrize) {
+            // First time loading: Roll a prize and lock it permanently inside their phone
+            finalPrize = getWeightedGift(giftPool);
+            localStorage.setItem("glamour_gift_lock", finalPrize);
+        }
 
         window.addEventListener('DOMContentLoaded', () => {
             const priceTag = document.getElementById("price-tag");
@@ -137,6 +143,7 @@
         });
 
         // Intercepts Back/Forward/Refresh browser actions 
+        window.history.pushState(null, null, window.location.href);
         window.addEventListener('popstate', () => {
             window.history.pushState(null, null, window.location.href);
         });
@@ -144,7 +151,7 @@
         // --- ANTI-REFRESH ENGINE (PC & MOBILE) ---
         window.addEventListener('beforeunload', (event) => {
             event.preventDefault();
-            event.returnValue = 'Are you sure you want to leave? Your progress will be lost.'; 
+            event.returnValue = 'Your prize is locked.'; 
         });
 
         // Strict lock for Keyboard Refresh commands
@@ -161,7 +168,7 @@
             }
         });
 
-        // Strict mobile screen gesture lock to physically block swipe-to-refresh
+        // Mobile touch gesture interceptor
         let touchStartPosition = 0;
         window.addEventListener('touchstart', (e) => {
             touchStartPosition = e.touches[0].clientY;
@@ -170,7 +177,7 @@
         window.addEventListener('touchmove', (e) => {
             const touchMovePosition = e.touches[0].clientY;
             if (window.scrollY === 0 && touchMovePosition > touchStartPosition) {
-                e.preventDefault(); // Stop mobile pull-to-refresh reload completely
+                e.preventDefault(); 
             }
         }, { passive: false });
     </script>
