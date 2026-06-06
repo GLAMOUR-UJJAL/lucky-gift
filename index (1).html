@@ -64,7 +64,7 @@
             text-transform: uppercase;
         }
         .subtext { color: #a4b0be; font-size: 0.9rem; margin-bottom: 15px; }
-        
+         
         /* New Reveal Button Styles */
         .reveal-btn {
             background: #ff4757;
@@ -95,6 +95,30 @@
             display: none; /* Hide button once clicked */
         }
 
+        /* Re-reveal Button Style */
+        .re-reveal-btn {
+            background: #ffa502;
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 165, 2, 0.4);
+            transition: transform 0.2s, background-color 0.2s;
+            margin: 15px 0 0 0;
+            display: none; /* Hidden until a gift is active */
+        }
+        .re-reveal-btn:hover {
+            background: #ff793f;
+        }
+        .re-reveal-btn:active {
+            transform: scale(0.95);
+        }
+
         /* Thank You Message Style */
         .thank-you-msg {
             font-size: 1.1rem;
@@ -118,10 +142,13 @@
         <h1>🎉CONGRATULATIONS🎉</h1>
         <div class="price" id="price-tag">🎁 Ready...</div>
         <div class="subtext" id="subtext-hint">Warning: Refreshing is disabled for this offer!</div>
-        
+         
         <!-- REVEAL BUTTON -->
         <button class="reveal-btn" id="reveal-button">Reveal Gift</button>
-        
+
+        <!-- RE-REVEAL BUTTON -->
+        <button class="re-reveal-btn" id="re-reveal-button">Reveal Another Gift</button>
+         
         <div class="thank-you-msg" id="thank-you">Thank you for being a valued customer!</div>
     </div>
 
@@ -145,7 +172,7 @@
         function getWeightedGift(pool) {
             const totalWeight = pool.reduce((sum, gift) => sum + gift.weight, 0);
             let randomNum = Math.random() * totalWeight;
-            
+             
             for (const gift of pool) {
                 if (randomNum < gift.weight) {
                     return gift.prize;
@@ -158,6 +185,7 @@
         // --- DEVICE MEMORY TRACKER ---
         const priceTag = document.getElementById("price-tag");
         const revealBtn = document.getElementById("reveal-button");
+        const reRevealBtn = document.getElementById("re-reveal-button");
         const thankYouBox = document.getElementById("thank-you");
 
         // Check if a prize was already claimed or generated for this device
@@ -175,7 +203,20 @@
                     showPrize(finalPrize);
                 });
             }
-            
+             
+            // Re-reveal button setup to wipe storage and reset the screen cleanly
+            reRevealBtn.addEventListener('click', () => {
+                localStorage.removeItem("glamour_gift_lock");
+                priceTag.textContent = "🎁 Ready...";
+                revealBtn.disabled = false;
+                revealBtn.style.display = "inline-block";
+                thankYouBox.style.display = "none";
+                reRevealBtn.style.display = "none";
+                
+                // Instantly re-trigger clean event bindings for next generation
+                location.reload();
+            });
+
             // Push history entries to safeguard navigation resets
             window.history.pushState(null, null, window.location.href);
         });
@@ -185,6 +226,7 @@
             revealBtn.disabled = true;
             thankYouBox.style.display = "block";
             thankYouBox.textContent = "Thank you for being a valued customer! Enjoy your gift.";
+            reRevealBtn.style.display = "inline-block"; // Safely shows the action handler element
         }
 
         // Intercept navigation loops 
