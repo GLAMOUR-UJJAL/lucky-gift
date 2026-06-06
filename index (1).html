@@ -59,6 +59,32 @@
         }
         .subtext { color: #a4b0be; font-size: 0.9rem; margin-bottom: 15px; }
         
+        /* Reveal Button Styles */
+        .reveal-btn {
+            background: #ff4757;
+            color: #fff;
+            border: none;
+            padding: 15px 35px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+            transition: transform 0.2s, background-color 0.2s;
+            margin: 20px 0;
+        }
+        .reveal-btn:hover {
+            background: #ff6b81;
+        }
+        .reveal-btn:active {
+            transform: scale(0.95);
+        }
+        .reveal-btn:disabled {
+            display: none; /* Hide button once clicked */
+        }
+
         /* Thank You Message Style */
         .thank-you-msg {
             font-size: 1.1rem;
@@ -67,6 +93,7 @@
             margin-top: 15px;
             border-top: 1px solid #444;
             padding-top: 15px;
+            display: none; /* Hidden by default until button is clicked */
         }
     </style>
 </head>
@@ -79,8 +106,10 @@
 
     <div class="card">
         <h1>🎉CONGRATULATIONS🎉</h1>
-        <div class="price" id="price-tag">Scanning...</div>
+        <div class="price" id="price-tag">🎁 Ready...</div>
         <div class="subtext" id="subtext-hint">Warning: Refreshing will lose this offer!</div>
+        
+        <button class="reveal-btn" id="reveal-button">Reveal Gift</button>
         
         <div class="thank-you-msg" id="thank-you">Thank you for being a valued customer!</div>
     </div>
@@ -116,15 +145,22 @@
             return pool[0].prize; // Fallback
         }
 
-        // --- GENERATE REWARD ON LOAD ---
+        // --- GENERATE REWARD ON CLICK ---
         window.addEventListener('DOMContentLoaded', () => {
             const priceTag = document.getElementById("price-tag");
+            const revealBtn = document.getElementById("reveal-button");
             const thankYouBox = document.getElementById("thank-you");
             
-            // Generate a temporary live prize
-            const dynamicPrize = getWeightedGift(giftPool);
-            priceTag.textContent = dynamicPrize;
-            thankYouBox.textContent = "Thank you for being a valued customer! Enjoy your gift.";
+            revealBtn.addEventListener('click', () => {
+                // Generate the prize on click
+                const dynamicPrize = getWeightedGift(giftPool);
+                priceTag.textContent = dynamicPrize;
+                thankYouBox.textContent = "Thank you for being a valued customer! Enjoy your gift.";
+                
+                // Show confirmation elements
+                revealBtn.disabled = true;
+                thankYouBox.style.display = "block";
+            });
         });
 
         // --- ANTI-REFRESH ENGINE (PC & MOBILE) ---
