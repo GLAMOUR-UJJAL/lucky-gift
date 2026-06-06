@@ -2,80 +2,296 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Lucky Gift!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mystery Gift Reveal</title>
     <style>
-        /* CUSTOMIZE YOUR LOOK HERE */
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            text-align: center; 
-            background: #1a1a1a; /* Dark sleek background */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1c29 0%, #10111a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            /* MOBILE REFRESH PREVENTION: Disables native pull-to-refresh and glow actions */
+            overscroll-behavior-y: contain;
+            overscroll-behavior: none;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            z-index: 2;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255, 65, 108, 0.3);
+        }
+
+        p.subtitle {
+            color: #8a8dbe;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        /* Gift Box Wrapper */
+        .gift-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            cursor: pointer;
+            perspective: 600px;
+            /* Prevent image/element selection highlights on mobile tap */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Gift Box CSS Graphics */
+        .gift-box {
+            position: relative;
+            width: 160px;
+            height: 150px;
+            background: #e74c3c;
+            margin: 40px auto 0 auto;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+
+        /* Ribbon */
+        .gift-box::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 100%;
+            background: #f1c40f;
+        }
+
+        /* Lid */
+        .gift-lid {
+            position: absolute;
+            top: 25px;
+            left: 15px;
+            width: 170px;
+            height: 40px;
+            background: #c0392b;
+            border-radius: 4px;
+            box-shadow: 0 4px 5px rgba(0,0,0,0.2);
+            z-index: 2;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: bottom left;
+        }
+
+        /* Lid Ribbon */
+        .gift-lid::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 100%;
+            background: #f1c40f;
+        }
+
+        /* Hover & Click Animations */
+        .gift-container:hover .gift-box {
+            transform: scale(1.03);
+        }
+
+        .gift-container:hover .gift-lid {
+            transform: translateY(-5px);
+        }
+
+        .gift-container.shake .gift-box {
+            animation: shake 0.5s ease-in-out infinite;
+        }
+
+        .gift-container.opened .gift-lid {
+            transform: translate(-40px, -60px) rotate(-35deg);
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-8px) rotate(-3deg); }
+            40% { transform: translateX(6px) rotate(3deg); }
+            60% { transform: translateX(-5px) rotate(-2deg); }
+            80% { transform: translateX(4px) rotate(2deg); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Reveal Section */
+        .reveal-card {
+            margin-top: 40px;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+
+        .reveal-card.show {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+
+        .prize-title {
+            font-size: 1.2rem;
+            color: #00ffcc;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .prize-name {
+            font-size: 3rem;
+            font-weight: 800;
             color: #fff;
-            padding: 50px 20px; 
+            text-shadow: 0 0 20px rgba(255,255,255,0.4);
+            animation: glow 2s ease-in-out infinite alternate;
         }
-        .card { 
-            background: #2a2a2a; 
-            padding: 40px; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
-            display: inline-block; 
-            max-width: 400px;
-            width: 100%;
-            border: 2px solid #ff4757; /* Accent border color */
+
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #fff, 0 0 20px #ff416c; }
+            to { text-shadow: 0 0 20px #fff, 0 0 30px #ff4b2b; }
         }
-        h1 { font-size: 1.8rem; margin-bottom: 10px; color: #f1f2f6; }
-        .price { 
-            font-size: 3.5rem; 
-            color: #ff4757; /* Price text color */
-            font-weight: bold; 
-            margin: 30px 0;
-            text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+
+        /* Disabled State styling */
+        .disabled {
+            cursor: not-allowed !important;
+            opacity: 0.6;
         }
-        .subtext { color: #a4b0be; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>🎉 𝗖𝗢𝗡𝗚𝗥𝗔𝗧𝗨𝗟𝗔𝗧𝗜𝗢𝗡𝗦 🎉</h1>
-        <div class="price" id="price-tag">Scanning...</div>
-        <div class="subtext">Show this screen to claim your offer!</div>
+    <div class="container">
+        <h1>GLAMOUR REWARD SYSTEM</h1>
+        <p class="subtitle" id="status-text">Click the mystery box to unlock your gift!</p>
+
+        <div class="gift-container" id="giftContainer" onclick="openGift()">
+            <div class="gift-lid" id="giftLid"></div>
+            <div class="gift-box"></div>
+        </div>
+
+        <div class="reveal-card" id="revealCard">
+            <p class="prize-title">🎉 Congratulations! You Won 🎉</p>
+            <div class="prize-name" id="prizeName">...</div>
+        </div>
     </div>
 
     <script>
-        // --- CUSTOMIZE YOUR GIFTS & PRIORITY HERE ---
-        // Change the 'weight' numbers below to adjust the winning probabilities.
-        // Currently configured to sum up to 137 (percentage chance).
-        const giftPool = [
-            { prize: "MAGIC LED BULB", weight: 30 }, // 30% Chance
-            { prize: "WATER BOTTLE",   weight: 25 }, // 25% Chance
-            { prize: "COFFEE MUG",    weight:  15 }, // 15% Chance
-            { prize: "CUP SET",       weight:  15 }, // 15% Chance   
-            { prize: "TRAY",          weight:   8 }, // 8% Chance
-            { prize: "LADIES BAG",     weight: 15 }, // 15% Chance
-            { prize: "UMBRELLA",       weight: 10 }, // 10% Chance
-            { prize: "GENTS BAG",      weight: 8  }, //  8% Chance
-            { prize: "WALL CLOCK",     weight: 6  }, //  6% Chance
-            { prize: "WRIST WATCH",    weight: 5  }, //  5% Chance
-            { prize: "FAN",            weight: 0  }  //  0% Chance (Grand Prize rarity)
+        // Weighted items based on your precise configuration
+        const gifts = [
+            { name: "MAGIC LED BULB", weight: 30 },
+            { name: "WATER BOTTLE",   weight: 25 },
+            { name: "COFFEE MUG",    weight: 15 },
+            { name: "CUP SET",       weight: 15 },
+            { name: "LADIES BAG",    weight: 15 },
+            { name: "UMBRELLA",      weight: 10 },
+            { name: "TRAY",          weight: 8  },
+            { name: "GENTS BAG",     weight: 8  },
+            { name: "WALL CLOCK",    weight: 6  },
+            { name: "WRIST WATCH",   weight: 5  },
+            { name: "FAN",           weight: 0  } // Grand Prize rarity 
         ];
 
-        // --- THE ENGINE (Do not change this part) ---
-        function getWeightedGift(pool) {
-            let totalWeight = pool.reduce((sum, gift) => sum + gift.weight, 0);
-            let randomNum = Math.random() * totalWeight;
-            
-            for (let i = 0; i < pool.length; i++) {
-                if (randomNum < pool[i].weight) {
-                    return pool[i].prize;
-                }
-                randomNum -= pool[i].weight;
+        let hasOpened = false;
+
+        // 1. DESKTOP NO REFRESH PROTECTION BLOCK
+        window.addEventListener('beforeunload', function (e) {
+            e.preventDefault();
+            e.returnValue = 'Are you sure you want to leave? Your reward state will be lost.';
+        });
+
+        window.addEventListener('keydown', function (e) {
+            if (
+                e.key === 'F5' || 
+                (e.ctrlKey && e.key === 'r') || 
+                (e.metaKey && e.key === 'r')
+            ) {
+                e.preventDefault();
+                alert("Action Denied: Page refreshing is locked on this gift window.");
             }
+        });
+
+        // 1b. MOBILE SPECIFIC REFRESH PREVENTION
+        // Intercept touch starts and pull down swipes at the top of the browser window
+        let touchStartClientY = 0;
+
+        window.addEventListener('touchstart', function (e) {
+            if (e.touches.length === 1) {
+                touchStartClientY = e.touches[0].clientY;
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', function (e) {
+            const touchMoveClientY = e.touches[0].clientY;
+            const touchDistanceY = touchMoveClientY - touchStartClientY;
+
+            // If the user is scrolling down at the top of the page, block it
+            if (document.documentElement.scrollTop === 0 && touchDistanceY > 0) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+
+        // 2. WEIGHTED RANDOMIZER ENGINE
+        function getWeightedGift() {
+            const totalWeight = gifts.reduce((sum, item) => sum + item.weight, 0);
+            if (totalWeight === 0) return gifts[gifts.length - 1].name;
+
+            let random = Math.random() * totalWeight;
+            
+            for (const gift of gifts) {
+                if (random < gift.weight) {
+                    return gift.name;
+                }
+                random -= gift.weight;
+            }
+            return gifts[0].name;
         }
 
-        // Run the script on page load
-        document.getElementById("price-tag").innerText = getWeightedGift(giftPool);
-    </script>
+        // 3. REVEAL SYSTEM
+        function openGift() {
+            if (hasOpened) return; 
+            hasOpened = true;
 
+            const container = document.getElementById('giftContainer');
+            const statusText = document.getElementById('status-text');
+            const revealCard = document.getElementById('revealCard');
+            const prizeNameText = document.getElementById('prizeName');
+
+            container.classList.add('shake');
+            statusText.textContent = "Unboxing your reward...";
+
+            setTimeout(() => {
+                container.classList.remove('shake');
+                container.classList.add('opened');
+                container.classList.add('disabled');
+                
+                const winningPrize = getWeightedGift();
+                
+                prizeNameText.textContent = winningPrize;
+                statusText.textContent = "Reward Claimed successfully!";
+                
+                revealCard.classList.add('show');
+            }, 1200); 
+        }
+    </script>
 </body>
 </html>
