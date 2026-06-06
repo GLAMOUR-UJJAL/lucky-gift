@@ -65,6 +65,36 @@
         }
         .subtext { color: #a4b0be; font-size: 0.9rem; margin-bottom: 15px; }
         
+        /* New Reveal Button Styles */
+        .reveal-btn {
+            background: #ff4757;
+            color: #fff;
+            border: none;
+            padding: 15px 35px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+            transition: transform 0.2s, background-color 0.2s;
+            margin: 20px 0;
+        }
+        .reveal-btn:hover {
+            background: #ff6b81;
+        }
+        .reveal-btn:active {
+            transform: scale(0.95);
+        }
+        .reveal-btn:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+            box-shadow: none;
+            display: none; /* Hide button once clicked */
+        }
+
         /* Thank You Message Style */
         .thank-you-msg {
             font-size: 1.1rem;
@@ -73,6 +103,7 @@
             margin-top: 15px;
             border-top: 1px solid #444;
             padding-top: 15px;
+            display: none; /* Hidden by default until button is clicked */
         }
     </style>
 </head>
@@ -85,8 +116,11 @@
 
     <div class="card">
         <h1>🎉CONGRATULATIONS🎉</h1>
-        <div class="price" id="price-tag">Scanning...</div>
+        <div class="price" id="price-tag">🎁 Ready...</div>
         <div class="subtext" id="subtext-hint">Warning: Refreshing is disabled for this offer!</div>
+        
+        <!-- REVEAL BUTTON -->
+        <button class="reveal-btn" id="reveal-button">Reveal Gift</button>
         
         <div class="thank-you-msg" id="thank-you">Thank you for being a valued customer!</div>
     </div>
@@ -121,37 +155,48 @@
             return pool[0].prize; 
         }
 
-        // --- MOBILE-PROOF STORAGE TRACKER ---
-        // Looks inside the hidden device memory to see if they already loaded a prize earlier
-        let finalPrize = localStorage.getItem("glamour_gift_lock");
+        // --- DEVICE MEMORY TRACKER ---
+        const priceTag = document.getElementById("price-tag");
+        const revealBtn = document.getElementById("reveal-button");
+        const thankYouBox = document.getElementById("thank-you");
 
-        if (!finalPrize) {
-            // First time loading: Roll a prize and lock it permanently inside their phone
-            finalPrize = getWeightedGift(giftPool);
-            localStorage.setItem("glamour_gift_lock", finalPrize);
-        }
+        // Check if a prize was already claimed or generated for this device
+        let savedPrize = localStorage.getItem("glamour_gift_lock");
 
         window.addEventListener('DOMContentLoaded', () => {
-            const priceTag = document.getElementById("price-tag");
-            const thankYouBox = document.getElementById("thank-you");
+            if (savedPrize) {
+                // User already opened it before! Instantly show it and remove the button
+                showPrize(savedPrize);
+            } else {
+                // New session, wait for button interaction
+                revealBtn.addEventListener('click', () => {
+                    const finalPrize = getWeightedGift(giftPool);
+                    localStorage.setItem("glamour_gift_lock", finalPrize);
+                    showPrize(finalPrize);
+                });
+            }
             
-            priceTag.textContent = finalPrize;
-            thankYouBox.textContent = "Thank you for being a valued customer! Enjoy your gift.";
-            
-            // Push a fake state entry into browser history to trap navigation actions
+            // Push history entries to safeguard navigation resets
             window.history.pushState(null, null, window.location.href);
         });
 
-        // Intercepts Back/Forward/Refresh browser actions 
+        function showPrize(prize) {
+            priceTag.textContent = prize;
+            revealBtn.disabled = true;
+            thankYouBox.style.display = "block";
+            thankYouBox.textContent = "Thank you for being a valued customer! Enjoy your gift.";
+        }
+
+        // Intercept navigation loops 
         window.history.pushState(null, null, window.location.href);
         window.addEventListener('popstate', () => {
             window.history.pushState(null, null, window.location.href);
         });
 
-        // --- ANTI-REFRESH ENGINE (PC & MOBILE) ---
+        // --- ANTI-REFRESH INTERCEPTORS ---
         window.addEventListener('beforeunload', (event) => {
             event.preventDefault();
-            event.returnValue = 'Your prize is locked.'; 
+            event.returnValue = ''; 
         });
 
         // Strict lock for Keyboard Refresh commands
@@ -164,11 +209,11 @@
                 (event.metaKey && isRKey)
             ) {
                 event.preventDefault();
-                alert("Refresh Action Prevented! Please process your current reward.");
+                alert("Refresh Action Prevented! Please view your reward.");
             }
         });
 
-        // Mobile touch gesture interceptor
+        // Mobile touch gesture interceptor to destroy native pull-to-refresh pull downs
         let touchStartPosition = 0;
         window.addEventListener('touchstart', (e) => {
             touchStartPosition = e.touches[0].clientY;
