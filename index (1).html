@@ -2,10 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Your Lucky Gift!</title>
     <style>
         /* CUSTOMIZE YOUR LOOK HERE */
+        html, body {
+            overflow: hidden; /* Hard block on mobile pull-to-refresh scrolling */
+            height: 100%;
+            margin: 0;
+        }
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             text-align: center; 
@@ -14,6 +19,7 @@
             padding: 50px 20px; 
             /* Prevents pull-to-refresh gesture on chrome/safari mobile */
             overscroll-behavior-y: contain; 
+            overscroll-behavior: none;
         }
         /* Header Layout Styles */
         .brand-header {
@@ -80,27 +86,25 @@
     <div class="card">
         <h1>🎉CONGRATULATIONS🎉</h1>
         <div class="price" id="price-tag">Scanning...</div>
-        <div class="subtext" id="subtext-hint">Warning: Refreshing will lose this offer!</div>
+        <div class="subtext" id="subtext-hint">Warning: Refreshing is disabled for this offer!</div>
         
         <div class="thank-you-msg" id="thank-you">Thank you for being a valued customer!</div>
     </div>
 
     <script>
         // --- CUSTOMIZE YOUR GIFTS & PRIORITY HERE ---
-        // Change the 'weight' numbers below to adjust the winning probabilities.
-        // Currently configured to sum up to 122 (percentage chance).
         const giftPool = [
-            { prize: "MAGIC LED BULB", weight: 30 }, // 30% Chance
-            { prize: "WATER BOTTLE",   weight: 25 }, // 25% Chance
-            { prize: "COFFEE MUG",    weight:  15 }, // 15% Chance
-            { prize: "CUP SET",        weight:  15 }, // 15% Chance
-            { prize: "TRAY",          weight:   8 }, // 8% Chance
-            { prize: "LADIES BAG",     weight: 15 }, // 15% Chance
-            { prize: "UMBRELLA",       weight: 10 }, // 10% Chance
-            { prize: "GENTS BAG",      weight: 8  }, //  8% Chance
-            { prize: "WALL CLOCK",     weight: 6  }, //  6% Chance
-            { prize: "WRIST WATCH",    weight: 5  }, //  5% Chance
-            { prize: "FAN",            weight: 0  }  //  0% Chance (Grand Prize rarity)
+            { prize: "MAGIC LED BULB", weight: 30 }, 
+            { prize: "WATER BOTTLE",   weight: 25 }, 
+            { prize: "COFFEE MUG",    weight:  15 }, 
+            { prize: "CUP SET",        weight:  15 }, 
+            { prize: "TRAY",          weight:   8 }, 
+            { prize: "LADIES BAG",     weight: 15 }, 
+            { prize: "UMBRELLA",       weight: 10 }, 
+            { prize: "GENTS BAG",      weight: 8  }, 
+            { prize: "WALL CLOCK",     weight: 6  }, 
+            { prize: "WRIST WATCH",    weight: 5  }, 
+            { prize: "FAN",            weight: 0  }  
         ];
 
         // --- THE ENGINE ---
@@ -114,40 +118,62 @@
                 }
                 randomNum -= gift.weight;
             }
-            return pool[0].prize; // Fallback
+            return pool[0].prize; 
         }
 
-        // --- GENERATE REWARD ON LOAD ---
+        // --- STATE MANAGEMENT (PREVENTS RESET ON REFRESH ATTENT) ---
+        // Generates the prize immediately inside memory so it never re-rolls
+        const finalPrize = getWeightedGift(giftPool);
+
         window.addEventListener('DOMContentLoaded', () => {
             const priceTag = document.getElementById("price-tag");
             const thankYouBox = document.getElementById("thank-you");
             
-            // Generate a temporary live prize
-            const dynamicPrize = getWeightedGift(giftPool);
-            priceTag.textContent = dynamicPrize;
+            priceTag.textContent = finalPrize;
             thankYouBox.textContent = "Thank you for being a valued customer! Enjoy your gift.";
+            
+            // Push a fake state entry into browser history to trap navigation actions
+            window.history.pushState(null, null, window.location.href);
+        });
+
+        // Intercepts Back/Forward/Refresh browser actions 
+        window.addEventListener('popstate', () => {
+            window.history.pushState(null, null, window.location.href);
         });
 
         // --- ANTI-REFRESH ENGINE (PC & MOBILE) ---
         window.addEventListener('beforeunload', (event) => {
             event.preventDefault();
-            event.returnValue = ''; // Standard trigger for modern browsers
+            event.returnValue = 'Are you sure you want to leave? Your progress will be lost.'; 
         });
 
-        // Stop F5, Ctrl+R, and Command+R keys on PC keyboards safely
+        // Strict lock for Keyboard Refresh commands
         window.addEventListener('keydown', (event) => {
             const isRKey = event.key.toLowerCase() === 'r' || event.code === 'KeyR';
             if (
                 event.key === 'F5' || 
+                event.key === 'Refresh' ||
                 (event.ctrlKey && isRKey) || 
                 (event.metaKey && isRKey)
             ) {
                 event.preventDefault();
-                alert("Refresh is blocked! Please claim your prize or close the tab.");
+                alert("Refresh Action Prevented! Please process your current reward.");
             }
         });
+
+        // Strict mobile screen gesture lock to physically block swipe-to-refresh
+        let touchStartPosition = 0;
+        window.addEventListener('touchstart', (e) => {
+            touchStartPosition = e.touches[0].clientY;
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            const touchMovePosition = e.touches[0].clientY;
+            if (window.scrollY === 0 && touchMovePosition > touchStartPosition) {
+                e.preventDefault(); // Stop mobile pull-to-refresh reload completely
+            }
+        }, { passive: false });
     </script>
 
 </body>
 </html>
-
